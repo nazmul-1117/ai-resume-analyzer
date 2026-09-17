@@ -1,0 +1,272 @@
+# ============================================================
+
+# AI Resume Analyzer - Root Git Ignore
+
+# ============================================================
+
+# -------------------------
+
+# Environment & Secrets
+
+# -------------------------
+
+.env
+.env.*
+!.env.example
+
+# -------------------------
+
+# Python
+
+# -------------------------
+
+**pycache**/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual environments
+
+.venv/
+venv/
+env/
+ENV/
+
+# Python packaging
+
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Python test / coverage
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Type checking / linters
+
+.mypy_cache/
+.pyright/
+.ruff_cache/
+
+# -------------------------
+
+# uv
+
+# -------------------------
+
+# uv lockfile should normally be committed
+
+# uv.lock
+
+# -------------------------
+
+# FastAPI / Application
+
+# -------------------------
+
+*.log
+logs/
+
+# -------------------------
+
+# Uploaded Resume Files
+
+# -------------------------
+
+uploads/
+uploaded_files/
+temp/
+tmp/
+
+# Resume / document files
+
+*.pdf
+*.doc
+*.docx
+
+# -------------------------
+
+# Machine Learning
+
+# -------------------------
+
+models/
+checkpoints/
+*.pt
+*.pth
+*.h5
+*.keras
+*.onnx
+*.pkl
+*.pickle
+*.joblib
+
+# ML experiment files
+
+wandb/
+mlruns/
+runs/
+
+# Jupyter Notebook
+
+.ipynb_checkpoints/
+
+# -------------------------
+
+# Node / React
+
+# -------------------------
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Frontend build
+
+frontend/dist/
+frontend/build/
+
+# Vite
+
+frontend/.vite/
+
+# -------------------------
+
+# Frontend Environment
+
+# -------------------------
+
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# -------------------------
+
+# IDE / Editors
+
+# -------------------------
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+.idea/
+*.iml
+
+# -------------------------
+
+# OS Files
+
+# -------------------------
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -------------------------
+
+# Temporary Files
+
+# -------------------------
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*~
+
+# -------------------------
+
+# Database
+
+# -------------------------
+
+*.sqlite
+*.sqlite3
+*.db
+
+# PostgreSQL local data
+
+postgres-data/
+postgresql-data/
+
+# -------------------------
+
+# Docker
+
+# -------------------------
+
+docker-compose.override.yml
+
+# -------------------------
+
+# Documentation / Generated Files
+
+# -------------------------
+
+*.generated.md
+
+# -------------------------
+
+# Security / Certificates
+
+# -------------------------
+
+*.pem
+*.key
+*.crt
+
+# -------------------------
+
+# Local Configuration
+
+# -------------------------
+
+*.local
+config.local.*
+settings.local.*
+
+# -------------------------
+
+# OS / Shell History
+
+# -------------------------
+
+.python_history
+
+# -------------------------
+
+# Coverage / Reports
+
+# -------------------------
+
+coverage.xml
+coverage.json
+.pytest_cache/
+
+# -------------------------
+
+# Backup Files
+
+# -------------------------
+
+*.orig
+*.rej
+
+
+# -------------------------
+# Manual Added Files
+# -------------------------
+research/

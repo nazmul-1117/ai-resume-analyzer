@@ -1,0 +1,19 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "An AI-powered resume analyzer that uses FastAPI, PDF processing, and LLM technology to analyze resumes and provide structured feedback, skills analysis, resume scoring, and personalized improvement suggestions."
+readme = "README.md"
+authors = [
+    { name = "Md. Nazmul Hossain", email = "nazmulonline2002@gmail.com" }
+]
+requires-python = ">=3.14.7"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+]
+
+[project.scripts]
+backend = "backend:main"
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"

@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Resume Assistant</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #d4d4d8 transparent;
+        }
+
+        body {
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+
+        .message-animation {
+            animation: messageIn 0.3s ease-out;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        .gradient-text {
+            background: linear-gradient(
+                135deg,
+                #7c3aed,
+                #a855f7,
+                #ec4899
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .chat-input {
+            transition: all 0.2s ease;
+        }
+
+        .chat-input:focus-within {
+            box-shadow:
+                0 0 0 3px rgba(124, 58, 237, 0.10),
+                0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-[#fafafa] text-zinc-900 h-screen overflow-hidden">
+
+<div class="flex h-screen">
+
+    <!-- ================================================= -->
+    <!-- SIDEBAR -->
+    <!-- ================================================= -->
+
+    <aside
+        id="sidebar"
+        class="fixed lg:static z-50 inset-y-0 left-0 w-[280px]
+               bg-white border-r border-zinc-200
+               flex flex-col
+               transform -translate-x-full lg:translate-x-0
+               transition-transform duration-300">
+
+        <!-- Logo -->
+        <div class="h-[72px] px-5 flex items-center border-b border-zinc-100">
+
+            <div class="flex items-center gap-3">
+
+                <div class="w-10 h-10 rounded-xl
+                            bg-gradient-to-br from-violet-600 to-fuchsia-500
+                            flex items-center justify-center shadow-lg shadow-violet-200">
+
+                    <i data-lucide="sparkles"
+                       class="w-5 h-5 text-white"></i>
+
+                </div>
+
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight">
+                        Resume<span class="text-violet-600">AI</span>
+                    </h1>
+
+                    <p class="text-[11px] text-zinc-400">
+                        AI Career Assistant
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- New Chat -->
+        <div class="p-4">
+
+            <button
+                id="newChatBtn"
+                class="w-full flex items-center justify-center gap-2
+                       bg-zinc-900 hover:bg-zinc-800
+                       text-white rounded-xl
+                       py-3 px-4
+                       text-sm font-medium
+                       transition-all">
+
+                <i data-lucide="plus" class="w-4 h-4"></i>
+
+                New conversation
+
+            </button>
+
+        </div>
+
+
+        <!-- Chat History -->
+        <div class="flex-1 overflow-y-auto px-3">
+
+            <p class="px-3 mb-3 text-[11px] uppercase
+                      tracking-wider font-semibold text-zinc-400">
+
+                Recent chats
+
+            </p>
+
+
+            <div id="chatHistory" class="space-y-1">
+
+                <button class="history-item w-full text-left px-3 py-3
+                               rounded-lg hover:bg-zinc-100
+                               transition-colors">
+
+                    <div class="flex items-center gap-3">
+
+                        <i data-lucide="message-square"
+                           class="w-4 h-4 text-zinc-400"></i>
+
+                        <span class="text-sm truncate">
+                            Resume improvement
+                        </span>
+
+                    </div>
+
+                </button>
+
+
+                <button class="history-item w-full text-left px-3 py-3
+                               rounded-lg hover:bg-zinc-100
+                               transition-colors">
+
+                    <div class="flex items-center gap-3">
+
+                        <i data-lucide="message-square"
+                           class="w-4 h-4 text-zinc-400"></i>
+
+                        <span class="text-sm truncate">
+                            Python developer skills
+                        </span>
+
+                    </div>
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Bottom -->
+        <div class="p-4 border-t border-zinc-100">
+
+            <button
+                class="w-full flex items-center gap-3
+                       px-3 py-3 rounded-xl
+                       hover:bg-zinc-100 transition-colors">
+
+                <div class="w-9 h-9 rounded-full
+                            bg-gradient-to-br from-violet-500 to-fuchsia-500
+                            flex items-center justify-center
+                            text-white text-sm font-semibold">
+
+                    N
+
+                </div>
+
+                <div class="text-left flex-1 min-w-0">
+
+                    <p class="text-sm font-medium truncate">
+                        User
+                    </p>
+
+                    <p class="text-xs text-zinc-400">
+                        Free plan
+                    </p>
+
+                </div>
+
+                <i data-lucide="more-horizontal"
+                   class="w-4 h-4 text-zinc-400"></i>
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- Mobile Overlay -->
+
+    <div
+        id="overlay"
+        class="fixed inset-0 bg-black/30 z-40 hidden lg:hidden">
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- MAIN -->
+    <!-- ================================================= -->
+
+    <main class="flex-1 flex flex-col min-w-0">
+
+
+        <!-- Header -->
+
+        <header
+            class="h-[72px] flex items-center
+                   justify-between px-4 sm:px-6
+                   bg-white/80 backdrop-blur
+                   border-b border-zinc-200">
+
+            <div class="flex items-center gap-3">
+
+                <button
+                    id="menuBtn"
+                    class="lg:hidden w-9 h-9 rounded-lg
+                           hover:bg-zinc-100
+                           flex items-center justify-center">
+
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+
+                </button>
+
+
+                <div>
+
+                    <h2 class="font-semibold text-sm sm:text-base">
+                        AI Resume Assistant
+                    </h2>
+
+                    <div class="flex items-center gap-1.5">
+
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+
+                        <span class="text-xs text-zinc-400">
+                            AI is online
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="flex items-center gap-2">
+
+                <button
+                    class="hidden sm:flex items-center gap-2
+                           px-3 py-2 rounded-lg
+                           text-sm text-zinc-600
+                           hover:bg-zinc-100">
+
+                    <i data-lucide="upload"
+                       class="w-4 h-4"></i>
+
+                    Upload resume
+
+                </button>
+
+
+                <button
+                    class="w-9 h-9 rounded-lg
+                           hover:bg-zinc-100
+                           flex items-center justify-center">
+
+                    <i data-lucide="settings"
+                       class="w-4 h-4 text-zinc-500"></i>
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================================================= -->
+        <!-- CHAT AREA -->
+        <!-- ================================================= -->
+
+        <section
+            id="chatContainer"
+            class="flex-1 overflow-y-auto">
+
+            <div
+                id="chatMessages"
+                class="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+
+
+                <!-- Welcome Screen -->
+
+                <div id="welcomeScreen"
+                     class="min-h-[calc(100vh-250px)]
+                            flex flex-col items-center
+                            justify-center text-center">
+
+                    <div
+                        class="w-16 h-16 rounded-2xl
+                               bg-gradient-to-br
+                               from-violet-600 to-fuchsia-500
+                               flex items-center justify-center
+                               shadow-xl shadow-violet-200 mb-6">
+
+                        <i data-lucide="sparkles"
+                           class="w-8 h-8 text-white"></i>
+
+                    </div>
+
+
+                    <h2 class="text-3xl sm:text-4xl
+                               font-bold tracking-tight">
+
+                        Your AI Career
+                        <span class="gradient-text">
+                            Assistant
+                        </span>
+
+                    </h2>
+
+
+                    <p class="mt-4 max-w-xl
+                              text-zinc-500 text-sm sm:text-base
+                              leading-relaxed">
+
+                        Ask me anything about your resume,
+                        career, skills, interviews, or job applications.
+
+                    </p>
+
+
+                    <!-- Suggestions -->
+
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2
+                               gap-3 w-full max-w-2xl mt-10">
+
+                        <button
+                            class="suggestion text-left p-4
+                                   rounded-xl border border-zinc-200
+                                   bg-white hover:border-violet-300
+                                   hover:shadow-md
+                                   transition-all">
+
+                            <div class="flex items-center gap-3">
+
+                                <div class="w-9 h-9 rounded-lg
+                                            bg-violet-50
+                                            flex items-center justify-center">
+
+                                    <i data-lucide="file-text"
+                                       class="w-4 h-4 text-violet-600"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <p class="text-sm font-medium">
+                                        Improve my resume
+                                    </p>
+
+                                    <p class="text-xs text-zinc-400 mt-1">
+                                        Make my resume more professional
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </button>
+
+
+                        <button
+                            class="suggestion text-left p-4
+                                   rounded-xl border border-zinc-200
+                                   bg-white hover:border-violet-300
+                                   hover:shadow-md
+                                   transition-all">
+
+                            <div class="flex items-center gap-3">
+
+                                <div class="w-9 h-9 rounded-lg
+                                            bg-blue-50
+                                            flex items-center justify-center">
+
+                                    <i data-lucide="target"
+                                       class="w-4 h-4 text-blue-600"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <p class="text-sm font-medium">
+                                        Check job match
+                                    </p>
+
+                                    <p class="text-xs text-zinc-400 mt-1">
+                                        Compare my skills with a job
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </button>
+
+
+                        <button
+                            class="suggestion text-left p-4
+                                   rounded-xl border border-zinc-200
+                                   bg-white hover:border-violet-300
+                                   hover:shadow-md
+                                   transition-all">
+
+                            <div class="flex items-center gap-3">
+
+                                <div class="w-9 h-9 rounded-lg
+                                            bg-emerald-50
+                                            flex items-center justify-center">
+
+                                    <i data-lucide="lightbulb"
+                                       class="w-4 h-4 text-emerald-600"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <p class="text-sm font-medium">
+                                        Find skill gaps
+                                    </p>
+
+                                    <p class="text-xs text-zinc-400 mt-1">
+                                        What skills should I learn?
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </button>
+
+
+                        <button
+                            class="suggestion text-left p-4
+                                   rounded-xl border border-zinc-200
+                                   bg-white hover:border-violet-300
+                                   hover:shadow-md
+                                   transition-all">
+
+                            <div class="flex items-center gap-3">
+
+                                <div class="w-9 h-9 rounded-lg
+                                            bg-orange-50
+                                            flex items-center justify-center">
+
+                                    <i data-lucide="message-circle"
+                                       class="w-4 h-4 text-orange-600"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <p class="text-sm font-medium">
+                                        Interview preparation
+                                    </p>
+
+                                    <p class="text-xs text-zinc-400 mt-1">
+                                        Prepare for my next interview
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- INPUT AREA -->
+        <!-- ================================================= -->
+
+        <footer
+            class="bg-gradient-to-t from-[#fafafa]
+                   via-[#fafafa] to-transparent
+                   pt-4 pb-5 px-4 sm:px-6">
+
+            <div class="max-w-4xl mx-auto">
+
+                <div
+                    class="chat-input bg-white
+                           border border-zinc-200
+                           rounded-2xl p-2">
+
+                    <div class="flex items-end gap-2">
+
+                        <!-- Attachment -->
+
+                        <button
+                            class="w-10 h-10 shrink-0
+                                   rounded-xl
+                                   hover:bg-zinc-100
+                                   flex items-center justify-center">
+
+                            <i data-lucide="paperclip"
+                               class="w-5 h-5 text-zinc-400"></i>
+
+                        </button>
+
+
+                        <!-- Textarea -->
+
+                        <textarea
+                            id="messageInput"
+                            rows="1"
+                            placeholder="Ask anything about your resume..."
+                            class="flex-1 resize-none outline-none
+                                   bg-transparent
+                                   text-sm
+                                   placeholder:text-zinc-400
+                                   py-2.5
+                                   max-h-32"></textarea>
+
+
+                        <!-- Send -->
+
+                        <button
+                            id="sendBtn"
+                            disabled
+                            class="w-10 h-10 shrink-0
+                                   rounded-xl
+                                   bg-zinc-200
+                                   text-zinc-400
+                                   flex items-center justify-center
+                                   transition-all">
+
+                            <i data-lucide="arrow-up"
+                               class="w-5 h-5"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <p class="text-center text-[11px]
+                          text-zinc-400 mt-3">
+
+                    AI can make mistakes. Always verify important information.
+
+                </p>
+
+            </div>
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ================================================= -->
+
+<script>
+
+const API_URL = "http://localhost:8000/api/v1/chat";
+
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const chatMessages = document.getElementById("chatMessages");
+const welcomeScreen = document.getElementById("welcomeScreen");
+
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+const newChatBtn = document.getElementById("newChatBtn");
+
+
+// =================================================
+// Icons
+// =================================================
+
+lucide.createIcons();
+
+
+// =================================================
+// Input handling
+// =================================================
+
+messageInput.addEventListener("input", () => {
+
+    messageInput.style.height = "auto";
+
+    messageInput.style.height =
+        Math.min(messageInput.scrollHeight, 128) + "px";
+
+
+    const hasText =
+        messageInput.value.trim().length > 0;
+
+    sendBtn.disabled = !hasText;
+
+    if (hasText) {
+
+        sendBtn.classList.remove(
+            "bg-zinc-200",
+            "text-zinc-400"
+        );
+
+        sendBtn.classList.add(
+            "bg-violet-600",
+            "text-white",
+            "hover:bg-violet-700",
+            "shadow-lg",
+            "shadow-violet-200"
+        );
+
+    } else {
+
+        sendBtn.classList.add(
+            "bg-zinc-200",
+            "text-zinc-400"
+        );
+
+        sendBtn.classList.remove(
+            "bg-violet-600",
+            "text-white",
+            "hover:bg-violet-700",
+            "shadow-lg",
+            "shadow-violet-200"
+        );
+    }
+
+});
+
+
+// =================================================
+// Enter to send
+// =================================================
+
+messageInput.addEventListener("keydown", (event) => {
+
+    if (
+        event.key === "Enter" &&
+        !event.shiftKey
+    ) {
+
+        event.preventDefault();
+
+        if (!sendBtn.disabled) {
+            sendMessage();
+        }
+
+    }
+
+});
+
+
+// =================================================
+// Send button
+// =================================================
+
+sendBtn.addEventListener("click", sendMessage);
+
+
+// =================================================
+// Suggestions
+// =================================================
+
+document.querySelectorAll(".suggestion").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const text =
+            button.querySelector("p").textContent;
+
+        messageInput.value = text;
+
+        messageInput.dispatchEvent(
+            new Event("input")
+        );
+
+        messageInput.focus();
+
+    });
+
+});
+
+
+// =================================================
+// Send Message
+// =================================================
+
+async function sendMessage() {
+
+    const message =
+        messageInput.value.trim();
+
+    if (!message) return;
+
+
+    // Remove welcome screen
+
+    if (welcomeScreen) {
+        welcomeScreen.remove();
+    }
+
+
+    // Add user message
+
+    addMessage(
+        message,
+        "user"
+    );
+
+
+    // Clear input
+
+    messageInput.value = "";
+
+    messageInput.style.height = "auto";
+
+    sendBtn.disabled = true;
+
+
+    // Show typing
+
+    const typingId = showTyping();
+
+
+    try {
+
+        const response = await fetch(
+            API_URL,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    message: message
+                })
+            }
+        );
+
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP error ${response.status}`
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        removeTyping(typingId);
+
+
+        // Handle possible response formats
+
+        const reply =
+            data.message ||
+            data.response ||
+            data.answer ||
+            data.content ||
+            data;
+
+
+        addMessage(
+            typeof reply === "string"
+                ? reply
+                : JSON.stringify(reply),
+            "assistant"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        removeTyping(typingId);
+
+        addMessage(
+            "Sorry, I couldn't connect to the AI service. Please make sure the FastAPI backend is running and try again.",
+            "assistant",
+            true
+        );
+
+    }
+
+}
+
+
+// =================================================
+// Add Message
+// =================================================
+
+function addMessage(
+    text,
+    sender,
+    isError = false
+) {
+
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.className =
+        `message-animation flex mb-6 ${
+            sender === "user"
+                ? "justify-end"
+                : "justify-start"
+        }`;
+
+
+    if (sender === "user") {
+
+        wrapper.innerHTML = `
+
+            <div class="max-w-[80%] sm:max-w-[70%]">
+
+                <div class="
+                    bg-zinc-900
+                    text-white
+                    rounded-2xl rounded-br-md
+                    px-4 py-3
+                    text-sm
+                    leading-relaxed
+                    shadow-sm
+                ">
+                    ${escapeHTML(text)}
+                </div>
+
+            </div>
+
+        `;
+
+    } else {
+
+        wrapper.innerHTML = `
+
+            <div class="flex gap-3 max-w-[90%]">
+
+                <div class="
+                    w-9 h-9 shrink-0
+                    rounded-xl
+                    bg-gradient-to-br
+                    from-violet-600
+                    to-fuchsia-500
+                    flex items-center justify-center
+                    shadow-md
+                ">
+
+                    <i data-lucide="sparkles"
+                       class="w-4 h-4 text-white"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="
+                        ${
+                            isError
+                                ? "bg-red-50 border-red-100 text-red-700"
+                                : "bg-white border-zinc-200 text-zinc-700"
+                        }
+                        border
+                        rounded-2xl rounded-tl-md
+                        px-4 py-3
+                        text-sm
+                        leading-relaxed
+                        shadow-sm
+                        whitespace-pre-wrap
+                    ">
+                        ${escapeHTML(text)}
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    chatMessages.appendChild(wrapper);
+
+    lucide.createIcons();
+
+    scrollToBottom();
+
+}
+
+
+// =================================================
+// Typing Indicator
+// =================================================
+
+function showTyping() {
+
+    const id =
+        "typing-" + Date.now();
+
+
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.id = id;
+
+    wrapper.className =
+        "flex gap-3 mb-6 message-animation";
+
+
+    wrapper.innerHTML = `
+
+        <div class="
+            w-9 h-9 shrink-0
+            rounded-xl
+            bg-gradient-to-br
+            from-violet-600
+            to-fuchsia-500
+            flex items-center justify-center
+        ">
+
+            <i data-lucide="sparkles"
+               class="w-4 h-4 text-white"></i>
+
+        </div>
+
+
+        <div class="
+            bg-white border border-zinc-200
+            rounded-2xl rounded-tl-md
+            px-4 py-3
+            shadow-sm
+        ">
+
+            <div class="flex gap-1">
+
+                <span class="
+                    typing-dot
+                    w-1.5 h-1.5
+                    bg-zinc-400
+                    rounded-full
+                "></span>
+
+                <span class="
+                    typing-dot
+                    w-1.5 h-1.5
+                    bg-zinc-400
+                    rounded-full
+                "></span>
+
+                <span class="
+                    typing-dot
+                    w-1.5 h-1.5
+                    bg-zinc-400
+                    rounded-full
+                "></span>
+
+            </div>
+
+        </div>
+    `;
+
+
+    chatMessages.appendChild(wrapper);
+
+    lucide.createIcons();
+
+    scrollToBottom();
+
+
+    return id;
+}
+
+
+// =================================================
+// Remove typing
+// =================================================
+
+function removeTyping(id) {
+
+    const element =
+        document.getElementById(id);
+
+    if (element) {
+        element.remove();
+    }
+
+}
+
+
+// =================================================
+// Scroll
+// =================================================
+
+function scrollToBottom() {
+
+    const container =
+        document.getElementById(
+            "chatContainer"
+        );
+
+    setTimeout(() => {
+
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: "smooth"
+        });
+
+    }, 50);
+
+}
+
+
+// =================================================
+// New Chat
+// =================================================
+
+newChatBtn.addEventListener(
+    "click",
+    () => {
+
+        location.reload();
+
+    }
+);
+
+
+// =================================================
+// Mobile Sidebar
+// =================================================
+
+menuBtn.addEventListener(
+    "click",
+    () => {
+
+        sidebar.classList.remove(
+            "-translate-x-full"
+        );
+
+        overlay.classList.remove(
+            "hidden"
+        );
+
+    }
+);
+
+
+overlay.addEventListener(
+    "click",
+    closeSidebar
+);
+
+
+function closeSidebar() {
+
+    sidebar.classList.add(
+        "-translate-x-full"
+    );
+
+    overlay.classList.add(
+        "hidden"
+    );
+
+}
+
+
+// =================================================
+// HTML Escape
+// =================================================
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+}
+
+</script>
+
+</body>
+</html>

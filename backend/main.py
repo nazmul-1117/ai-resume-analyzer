@@ -2,7 +2,8 @@ from fastapi import FastAPI, status
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers.chat import chat_router
+from app.routers.chat_router import chat_router
+from app.routers.resume_router import resume_router
  
 API_VERSION: str = "v1"
 API_PREFIX: str = f"/api/{API_VERSION}"
@@ -12,17 +13,6 @@ app = FastAPI(
     description="An AI-powered resume analyzer that uses FastAPI, PDF processing, and LLM technology to analyze resumes and provide structured feedback, skills analysis, resume scoring, and personalized improvement suggestions.",
     version= API_VERSION,
 )
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=[
-#         "http://localhost:5500",
-#         "http://127.0.0.1:5500",
-#     ],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +24,11 @@ app.add_middleware(
 
 app.include_router(
     router=chat_router,
+    prefix=API_PREFIX
+)
+
+app.include_router(
+    router=resume_router,
     prefix=API_PREFIX
 )
 

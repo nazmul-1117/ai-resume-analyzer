@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 
-from app.controllers.ai_chat import ai_chat
+from app.controllers.chat_controller import ai_chat
 
 chat_router = APIRouter(
     prefix="/chat",

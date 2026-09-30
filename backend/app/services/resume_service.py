@@ -1,75 +1,133 @@
 from fastapi import UploadFile
 
-import pymupdf
-import re
+from app.schemas.resume_schema import ResumeProfile
+from app.parsers.docx_parser import DOCXResumeParser
+from app.parsers.pdf_parser import PDFResumeParser
+from app.utils.text_cleaner import TextCleaner
+
+from app.services.resume_structurer import ResumeStructurer
 
 class ResumeService:
 
+    ALLOWED_CONTENT_TYPES = {
+        "application/pdf",
+        (
+            "application/"
+            "vnd.openxmlformats-officedocument."
+            "wordprocessingml.document"
+        ),
+    }
+
+    MAX_FILE_SIZE = 5*1024*1024 # 5 MB
+
     def __init__(
-            self
+            self,
+            pdf_parser: PDFResumeParser,
+            docx_parser: DOCXResumeParser,
+            text_cleaner: TextCleaner,
+            resume_structurer: ResumeStructurer,
     ):
-        pass
+        self.pdf_parser = pdf_parser
+        self.docx_parser = docx_parser
+        self.text_cleaner = text_cleaner
+        self.resume_structurer = resume_structurer
 
     async def analyze_resume(
             self,
             *,
             file: UploadFile | None = None
-    ) -> str:
+    ) -> ResumeProfile:
 
-        if file is None:
-            raise ValueError("File Not Found")
+        self._validate_file(file=file)
 
-        if file.content_type != "application/pdf":
-            raise ValueError("Please upload only pdf file")
+        file_bytes = await file.read()
 
-        extracted_text = await self._extract_text(file=file)
-        cleaned_text = self._clean_text(raw_text=extracted_text)
+        self._validate_file_size(
+            file_bytes=file_bytes
+        )
 
-        return cleaned_text
+        raw_text = await self._extract_text(
+            file=file,
+            file_bytes=file_bytes,
+        )
+
+        cleaned_text = self.text_cleaner.clean(
+            raw_text=raw_text
+        )
+
+        if not cleaned_text:
+            raise ValueError(
+                "Not readable text could be extracted from the resume."
+            )
+
+        resume_profile = self.resume_structurer.structure(
+            text=cleaned_text
+        )
+
+        print(cleaned_text)
+
+        return resume_profile
+
+    def _validate_file(
+            self,
+            *,
+            file: UploadFile,
+    ) -> None:
+        
+        if not file.filename:
+            raise ValueError(
+                "Resume file is required"
+            )
+
+        if file.content_type not in self.ALLOWED_CONTENT_TYPES:
+            raise ValueError(
+                "Only PDF and DOCX files are supported "
+                f"But you given {file.content_type}"
+            )
+
+    def _validate_file_size(
+            self,
+            *,
+            file_bytes: bytes
+    ) -> None:
+
+        if not file_bytes:
+            raise ValueError(
+                "Uploaded file is empty"
+            )
+
+        if len(file_bytes) > self.MAX_FILE_SIZE:
+            raise ValueError(
+                "Resume file size must not exceed 5 MB "
+                f"But you given {len(file_bytes)/(1024*1024)} MB"
+            )
 
     async def _extract_text(
             self,
             *,
-            file: UploadFile
+            file: UploadFile,
+            file_bytes: bytes
     ) -> str:
 
-        pdf_bytes = await file.read()
+        if file.content_type == "application/pdf":
+            return await self.pdf_parser.extract_text(
+                file_bytes=file_bytes
+            )
 
-        document = pymupdf.open(
-            stream=pdf_bytes,
-            filetype="pdf"
+        if (
+            file.content_type == (
+                "application/"
+                "vnd.openxmlformats-officedocument."
+                "wordprocessingml.document"
+            )
+        ):
+            return await self.docx_parser.extract_text(
+                file_bytes=file_bytes,
+            )
+
+        raise ValueError(
+            "Unsupported resume format."
         )
-
-        text = ""
-
-        for page in document:
-            text += page.get_text()
-
-        return text
-
-
-    def _clean_text(
-            self,
-            *,
-            raw_text: str
-    ) -> str:
-
-        text: str = raw_text.lower().strip()
-        text = text.replace("\n", " ")
-
-        text = re.sub(
-            r"[^a-z0-9+#./\-\s]",
-            "",
-            text
-        )
-
-        text = re.sub(
-            r"\s+",
-            " ",
-            text,
-        )
-
-        return text.strip()
 
 
     def _save_file(
